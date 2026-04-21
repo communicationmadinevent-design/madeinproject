@@ -1,0 +1,2847 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Made In Project — Racontez-nous votre événement</title>
+<meta name="description" content="Concevez votre événement en 7 actes. Un outil Mad in Event.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400;1,9..144,500;1,9..144,600&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MADE IN PROJECT — THEME & RESET
+   ============================================================ */
+:root {
+  --bg-void: #0A0A0D;
+  --bg-deep: #111116;
+  --bg-card: #16161D;
+  --bg-card-hover: #1C1C25;
+  --gold: #C9A227;
+  --gold-soft: #E5BE3E;
+  --gold-dim: #8A6F1A;
+  --cream: #F5F1E6;
+  --cream-dim: #D9D3C3;
+  --ash: #A39C8A;
+  --ash-dim: #6B6558;
+  --border: #2A2A32;
+  --border-hot: #3A3A45;
+  --success: #7FA07F;
+  --alert: #C2502A;
+
+  --font-display: 'Fraunces', 'Times New Roman', serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 16px;
+
+  --t-fast: 180ms cubic-bezier(0.2, 0, 0.1, 1);
+  --t-med: 420ms cubic-bezier(0.2, 0, 0.1, 1);
+  --t-slow: 900ms cubic-bezier(0.2, 0, 0.1, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-void);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; }
+
+/* ============================================================
+   FILM GRAIN OVERLAY
+   ============================================================ */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.9'/></svg>");
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
+}
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 40px;
+  background: linear-gradient(to bottom, rgba(10,10,13,0.9), rgba(10,10,13,0));
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
+.brand em {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 400;
+}
+
+.progress-indicator {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--ash);
+  transition: opacity var(--t-med);
+}
+
+.progress-indicator.hidden { opacity: 0; pointer-events: none; }
+
+.progress-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.progress-dot {
+  width: 18px;
+  height: 2px;
+  background: var(--border);
+  transition: background var(--t-med);
+}
+
+.progress-dot.done { background: var(--gold-dim); }
+.progress-dot.current { background: var(--gold); }
+
+/* ============================================================
+   SCREEN SYSTEM
+   ============================================================ */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 40px 80px;
+  overflow-y: auto;
+  opacity: 0;
+  transition: opacity var(--t-slow);
+}
+
+.screen.active {
+  display: flex;
+  opacity: 1;
+}
+
+.screen-inner {
+  width: 100%;
+  max-width: 1000px;
+  margin: auto;
+}
+
+/* Entry curtain animation */
+.curtain-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.curtain-top, .curtain-bottom {
+  flex: 1;
+  background: var(--bg-void);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 600ms cubic-bezier(0.7, 0, 0.3, 1);
+}
+
+.curtain-top { transform-origin: top; }
+.curtain-bottom { transform-origin: bottom; }
+
+.curtain-transition.active .curtain-top,
+.curtain-transition.active .curtain-bottom {
+  transform: scaleY(1);
+}
+
+/* ============================================================
+   LANDING SCREEN
+   ============================================================ */
+#screen-landing {
+  background: radial-gradient(ellipse at center bottom, #1A1A22 0%, var(--bg-void) 60%);
+}
+
+.landing-inner {
+  text-align: center;
+  position: relative;
+}
+
+.landing-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: fadeUp 900ms var(--t-slow) 200ms forwards;
+}
+
+.landing-meta::before, .landing-meta::after {
+  content: '—';
+  margin: 0 16px;
+  color: var(--gold-dim);
+}
+
+.landing-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(48px, 8vw, 112px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  opacity: 0;
+  animation: fadeUp 1200ms var(--t-slow) 400ms forwards;
+}
+
+.landing-title-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(48px, 8vw, 112px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--gold);
+  margin-bottom: 48px;
+  opacity: 0;
+  animation: fadeUp 1200ms var(--t-slow) 700ms forwards;
+}
+
+.landing-sub {
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--cream-dim);
+  max-width: 580px;
+  margin: 0 auto 56px;
+  opacity: 0;
+  animation: fadeUp 900ms var(--t-slow) 1000ms forwards;
+}
+
+.landing-sub em {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--cream);
+}
+
+.landing-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 900ms var(--t-slow) 1300ms forwards;
+}
+
+.landing-footer {
+  position: absolute;
+  bottom: -180px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 40px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ash-dim);
+  opacity: 0;
+  animation: fadeUp 900ms var(--t-slow) 1600ms forwards;
+}
+
+.landing-footer span { position: relative; }
+.landing-footer span + span::before {
+  content: '·';
+  position: absolute;
+  left: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 32px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  transition: all var(--t-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--gold);
+  color: var(--bg-void);
+  border-color: var(--gold);
+}
+.btn-primary:hover {
+  background: var(--gold-soft);
+  border-color: var(--gold-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(201, 162, 39, 0.3);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--cream);
+  border-color: var(--border-hot);
+}
+.btn-ghost:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.btn-arrow::after {
+  content: '→';
+  font-size: 18px;
+  transition: transform var(--t-fast);
+}
+.btn:hover .btn-arrow::after,
+.btn-arrow:hover::after {
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   ACT SCREENS
+   ============================================================ */
+.act-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.act-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+  display: inline-block;
+}
+
+.act-label::before, .act-label::after {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--gold-dim);
+  vertical-align: middle;
+  margin: 0 16px;
+}
+
+.act-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.act-title em {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 400;
+}
+
+.act-subtitle {
+  font-size: 17px;
+  color: var(--ash);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* Questions */
+.question-block {
+  margin-bottom: 56px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 700ms ease-out;
+}
+
+.question-block.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.question-label {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.question-number {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+}
+
+.question-text {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.3;
+  color: var(--cream);
+  flex: 1;
+}
+
+.question-text em { font-style: italic; color: var(--gold); }
+
+.question-hint {
+  font-size: 14px;
+  color: var(--ash);
+  margin-top: -16px;
+  margin-bottom: 20px;
+  margin-left: 36px;
+  font-style: italic;
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.text-input, .text-area {
+  width: 100%;
+  padding: 18px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--cream);
+  font-size: 16px;
+  transition: all var(--t-fast);
+}
+
+.text-input:focus, .text-area:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: var(--bg-card-hover);
+}
+
+.text-input::placeholder, .text-area::placeholder {
+  color: var(--ash-dim);
+}
+
+.text-area {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.input-with-voice {
+  position: relative;
+}
+
+.voice-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-hot);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--t-fast);
+}
+
+.voice-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.voice-btn.active {
+  background: var(--gold);
+  color: var(--bg-void);
+  border-color: var(--gold);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.5); }
+  50% { box-shadow: 0 0 0 12px rgba(201, 162, 39, 0); }
+}
+
+/* ============================================================
+   CARD GRID (event types, animations, scope)
+   ============================================================ */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(201, 162, 39, 0.08), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--t-med);
+}
+
+.card:hover {
+  border-color: var(--border-hot);
+  background: var(--bg-card-hover);
+  transform: translateY(-3px);
+}
+
+.card:hover::before { opacity: 1; }
+
+.card.selected {
+  border-color: var(--gold);
+  background: var(--bg-card-hover);
+}
+
+.card.selected::before { opacity: 1; }
+
+.card-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  display: block;
+  line-height: 1;
+  filter: grayscale(30%);
+  transition: filter var(--t-fast);
+}
+
+.card.selected .card-icon { filter: grayscale(0); }
+
+.card-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--cream);
+}
+
+.card-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--bg-void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all var(--t-fast);
+}
+
+.card.selected .card-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ============================================================
+   EMOTION CLOUD
+   ============================================================ */
+.emotion-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px;
+}
+
+.emotion-chip {
+  padding: 12px 20px;
+  border: 1px solid var(--border-hot);
+  border-radius: 50px;
+  background: var(--bg-card);
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 400;
+  transition: all var(--t-fast);
+  cursor: pointer;
+}
+
+.emotion-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold-dim);
+}
+
+.emotion-chip.selected {
+  background: var(--gold);
+  color: var(--bg-void);
+  border-color: var(--gold);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.emotion-chip.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-counter {
+  margin-top: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ash);
+  letter-spacing: 0.1em;
+}
+
+.emotion-counter strong { color: var(--gold); font-weight: 500; }
+
+/* ============================================================
+   SLIDERS
+   ============================================================ */
+.slider-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 12px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.slider-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--cream);
+}
+
+.slider-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--gold);
+  background: rgba(201, 162, 39, 0.08);
+  padding: 4px 10px;
+  border-radius: 3px;
+}
+
+.range-wrap {
+  position: relative;
+  padding: 8px 0;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--border-hot);
+  outline: none;
+  border-radius: 2px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.15);
+  transition: all var(--t-fast);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 8px rgba(201, 162, 39, 0.2);
+  transform: scale(1.1);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.15);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ash-dim);
+}
+
+/* Bipolar slider (tone) */
+.bipolar-slider {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  margin-bottom: 12px;
+}
+
+.bipolar-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+}
+
+.bipolar-labels span:first-child { color: var(--cream); }
+.bipolar-labels span:last-child { color: var(--cream); }
+
+/* ============================================================
+   QUICK OPTIONS (date, size)
+   ============================================================ */
+.quick-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.quick-pill {
+  padding: 10px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  color: var(--cream-dim);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--t-fast);
+  cursor: pointer;
+}
+
+.quick-pill:hover {
+  border-color: var(--gold-dim);
+  color: var(--cream);
+}
+
+.quick-pill.selected {
+  background: var(--gold);
+  color: var(--bg-void);
+  border-color: var(--gold);
+}
+
+/* ============================================================
+   DICE / SURPRISE BUTTON
+   ============================================================ */
+.dice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: var(--bg-deep);
+  border: 1px dashed var(--border-hot);
+  border-radius: 50px;
+  color: var(--ash);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all var(--t-fast);
+  margin-top: 16px;
+  cursor: pointer;
+}
+
+.dice-btn:hover {
+  border-style: solid;
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(201, 162, 39, 0.05);
+}
+
+.dice-btn:hover .dice-icon {
+  animation: roll 600ms ease-in-out;
+}
+
+.dice-icon {
+  font-size: 16px;
+  display: inline-block;
+}
+
+@keyframes roll {
+  0% { transform: rotate(0); }
+  50% { transform: rotate(360deg) scale(1.3); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+
+/* ============================================================
+   NAV (prev/next)
+   ============================================================ */
+.act-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.nav-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ash-dim);
+}
+
+.nav-meta em {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--gold);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ============================================================
+   EPILOGUE — BRIEF REVEAL
+   ============================================================ */
+#screen-epilogue { background: var(--bg-void); }
+
+.epilogue-inner {
+  max-width: 860px;
+  width: 100%;
+}
+
+.reveal-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.reveal-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeUp 800ms ease-out 400ms forwards;
+}
+
+.reveal-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(44px, 7vw, 88px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+  opacity: 0;
+  animation: fadeUp 1000ms ease-out 800ms forwards;
+}
+
+.reveal-title em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.reveal-sub {
+  font-size: 17px;
+  color: var(--ash);
+  max-width: 500px;
+  margin: 0 auto;
+  opacity: 0;
+  animation: fadeUp 800ms ease-out 1200ms forwards;
+}
+
+.brief-card {
+  background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-deep) 100%);
+  border: 1px solid var(--border-hot);
+  border-radius: var(--radius-lg);
+  padding: 48px 40px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 900ms ease-out;
+}
+
+.brief-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.brief-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+}
+
+.brief-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brief-ref {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--ash);
+}
+
+.brief-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ash-dim);
+}
+
+.brief-section {
+  margin-bottom: 40px;
+}
+
+.brief-section:last-child { margin-bottom: 0; }
+
+.brief-section-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.brief-synopsis {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 24px;
+  line-height: 1.5;
+  color: var(--cream);
+}
+
+.brief-synopsis em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px 40px;
+}
+
+.brief-field {
+  border-left: 2px solid var(--border);
+  padding-left: 16px;
+}
+
+.brief-field-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 4px;
+}
+
+.brief-field-value {
+  font-size: 16px;
+  color: var(--cream);
+  font-weight: 500;
+}
+
+.brief-emotions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.brief-emotion-pill {
+  padding: 8px 16px;
+  background: rgba(201, 162, 39, 0.08);
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 50px;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--gold-soft);
+  font-size: 15px;
+}
+
+.brief-recommendations {
+  list-style: none;
+  padding: 0;
+}
+
+.brief-rec-item {
+  padding: 18px 0;
+  border-bottom: 1px dashed var(--border);
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.brief-rec-item:last-child { border: none; }
+
+.brief-rec-num {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 28px;
+  color: var(--gold);
+  font-weight: 300;
+  line-height: 1;
+  min-width: 36px;
+}
+
+.brief-rec-text {
+  color: var(--cream-dim);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.brief-rec-text strong { color: var(--cream); font-weight: 600; }
+
+.brief-score {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  background: rgba(201, 162, 39, 0.05);
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  border-radius: var(--radius);
+  margin-top: 24px;
+}
+
+.score-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: conic-gradient(var(--gold) var(--p, 0%), var(--border) 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.score-circle::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background: var(--bg-card);
+  border-radius: 50%;
+}
+
+.score-value {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 26px;
+  color: var(--gold);
+}
+
+.score-info {
+  flex: 1;
+}
+
+.score-tier {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  color: var(--cream);
+  margin-bottom: 4px;
+}
+
+.score-desc {
+  font-size: 14px;
+  color: var(--ash);
+}
+
+.final-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 48px;
+  opacity: 0;
+  animation: fadeUp 800ms ease-out 2000ms forwards;
+}
+
+.badge-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  opacity: 0;
+  animation: fadeUp 800ms ease-out 2400ms forwards;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--gold-dim);
+  border-radius: 50px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ============================================================
+   LOADING REVEAL (transition before epilogue)
+   ============================================================ */
+.reveal-loading {
+  text-align: center;
+}
+
+.reveal-loading-text {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 28px;
+  color: var(--cream);
+  margin-bottom: 32px;
+}
+
+.loading-dots {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+.loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: loadingDot 1.4s infinite ease-in-out;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loadingDot {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 720px) {
+  .topbar { padding: 16px 20px; }
+  .screen { padding: 80px 20px 60px; }
+  .act-header { margin-bottom: 32px; }
+  .question-block { margin-bottom: 40px; }
+  .question-text { font-size: 22px; }
+  .landing-footer { display: none; }
+  .brief-grid { grid-template-columns: 1fr; gap: 20px; }
+  .brief-card { padding: 28px 22px; }
+  .act-nav { flex-direction: column; gap: 20px; }
+  .act-nav > * { width: 100%; }
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Hide scrollbar in a nice way */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-void); }
+::-webkit-scrollbar-thumb { background: var(--border-hot); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<div class="curtain-transition" id="curtain">
+  <div class="curtain-top"></div>
+  <div class="curtain-bottom"></div>
+</div>
+
+<!-- ============================================================
+     TOP BAR
+     ============================================================ -->
+<div class="topbar">
+  <div class="brand">Made <em>In</em> Project</div>
+  <div class="progress-indicator hidden" id="progress">
+    <span id="progress-label">ACTE I</span>
+    <div class="progress-dots" id="progress-dots"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN: LANDING
+     ============================================================ -->
+<section class="screen active" id="screen-landing">
+  <div class="screen-inner landing-inner">
+    <div class="landing-meta">Un outil propulsé par Mad in Event</div>
+    <h1 class="landing-title">Racontez-nous</h1>
+    <h1 class="landing-title">votre événement.</h1>
+    <h1 class="landing-title-italic">Nous écrirons la suite.</h1>
+    <p class="landing-sub">
+      En <em>7 actes</em> et 7 minutes, façonnez le scénario de votre prochain événement.
+      Un conseiller Mad in Event vous rappelle avec un <em>brief déjà prêt</em>.
+    </p>
+    <div class="landing-actions">
+      <button class="btn btn-primary btn-arrow" onclick="startJourney('standard')">
+        Commencer le scénario
+      </button>
+      <button class="btn btn-ghost" onclick="startJourney('express')">
+        Mode express · 2 min
+      </button>
+    </div>
+    <div class="landing-footer">
+      <span>Conception Toulon · Paris</span>
+      <span>Vos données restent en France</span>
+      <span>Conforme RGPD</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PROLOGUE
+     ============================================================ -->
+<section class="screen" id="screen-prologue">
+  <div class="screen-inner">
+    <div class="act-header">
+      <span class="act-label">Prologue</span>
+      <h2 class="act-title">On fait <em>connaissance</em> ?</h2>
+      <p class="act-subtitle">Trois informations rapides, puis on entre dans le vif du sujet.</p>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">01</span>
+        <span class="question-text">Comment vous appelez-vous ?</span>
+      </div>
+      <div class="input-with-voice">
+        <input type="text" class="text-input" id="contact-name" placeholder="Prénom et nom" autocomplete="name">
+        <button class="voice-btn" onclick="toggleVoice(this, 'contact-name')" title="Dicter">🎙</button>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">02</span>
+        <span class="question-text">Et votre <em>organisation</em> ?</span>
+      </div>
+      <input type="text" class="text-input" id="contact-org" placeholder="Nom de l'entreprise, association ou projet personnel">
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">03</span>
+        <span class="question-text">Comment vous joindre ?</span>
+      </div>
+      <div class="input-group">
+        <input type="email" class="text-input" id="contact-email" placeholder="Email professionnel" autocomplete="email">
+        <input type="tel" class="text-input" id="contact-phone" placeholder="Téléphone (optionnel, mais on vous rappelle plus vite)">
+      </div>
+      <div class="quick-options" data-group="slot">
+        <button class="quick-pill" data-value="morning" onclick="selectPill(this)">🌅 Matin</button>
+        <button class="quick-pill" data-value="lunch" onclick="selectPill(this)">🥗 Pause déj</button>
+        <button class="quick-pill" data-value="afternoon" onclick="selectPill(this)">☕ Après-midi</button>
+        <button class="quick-pill" data-value="evening" onclick="selectPill(this)">🌙 Soirée</button>
+      </div>
+      <p class="question-hint">Quel créneau vous arrange pour qu'on vous rappelle ?</p>
+    </div>
+
+    <div class="act-nav">
+      <button class="btn btn-ghost" onclick="goToScreen('landing')">← Retour</button>
+      <span class="nav-meta">Reste <em>6 actes</em></span>
+      <button class="btn btn-primary btn-arrow" onclick="goToScreen('act-1')">Acte I</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ACTE I — LE DÉCOR
+     ============================================================ -->
+<section class="screen" id="screen-act-1">
+  <div class="screen-inner">
+    <div class="act-header">
+      <span class="act-label">Acte I</span>
+      <h2 class="act-title">Le <em>Décor</em></h2>
+      <p class="act-subtitle">Quel type de scène, quand, et où levons-nous le rideau ?</p>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">04</span>
+        <span class="question-text">Quel <em>type de scène</em> imaginez-vous ?</span>
+      </div>
+      <div class="card-grid" data-multi="true" data-field="event-types">
+        <div class="card" data-value="seminaire" onclick="toggleCard(this)">
+          <span class="card-icon">🎯</span>
+          <div class="card-label">Séminaire / Team building</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="soiree" onclick="toggleCard(this)">
+          <span class="card-icon">🥂</span>
+          <div class="card-label">Soirée d'entreprise / Gala</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="lancement" onclick="toggleCard(this)">
+          <span class="card-icon">🚀</span>
+          <div class="card-label">Lancement de produit</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="congres" onclick="toggleCard(this)">
+          <span class="card-icon">🎤</span>
+          <div class="card-label">Congrès / Conférence</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="festival" onclick="toggleCard(this)">
+          <span class="card-icon">🎪</span>
+          <div class="card-label">Festival / Grand public</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="concert" onclick="toggleCard(this)">
+          <span class="card-icon">🎵</span>
+          <div class="card-label">Concert</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="soiree-privee" onclick="toggleCard(this)">
+          <span class="card-icon">🌟</span>
+          <div class="card-label">Soirée privée</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="autre" onclick="toggleCard(this)">
+          <span class="card-icon">✨</span>
+          <div class="card-label">Autre / Mix</div>
+          <div class="card-check">✓</div>
+        </div>
+      </div>
+      <button class="dice-btn" onclick="rollDice('event-types')">
+        <span class="dice-icon">🎲</span>
+        <span>Surprise-moi</span>
+      </button>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">05</span>
+        <span class="question-text">Quand <em>lèvera-t-on le rideau</em> ?</span>
+      </div>
+      <div class="quick-options" data-group="date">
+        <button class="quick-pill" data-value="3months" onclick="selectPill(this)">Dans 3 mois</button>
+        <button class="quick-pill" data-value="thisyear" onclick="selectPill(this)">Cette année</button>
+        <button class="quick-pill" data-value="nextyear" onclick="selectPill(this)">L'année prochaine</button>
+        <button class="quick-pill" data-value="flexible" onclick="selectPill(this)">Pas encore fixé</button>
+      </div>
+      <div style="margin-top: 20px;">
+        <input type="text" class="text-input" id="event-date-precise" placeholder="Ou une date précise (JJ/MM/AAAA)">
+      </div>
+      <div class="quick-options" data-group="duration" style="margin-top: 16px;">
+        <button class="quick-pill" data-value="evening" onclick="selectPill(this)">Une soirée</button>
+        <button class="quick-pill" data-value="day" onclick="selectPill(this)">Une journée</button>
+        <button class="quick-pill" data-value="weekend" onclick="selectPill(this)">2-3 jours</button>
+        <button class="quick-pill" data-value="long" onclick="selectPill(this)">+ de 3 jours</button>
+      </div>
+      <p class="question-hint">Durée approximative</p>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">06</span>
+        <span class="question-text">Avez-vous un <em>lieu</em> en tête ?</span>
+      </div>
+      <div class="quick-options" data-group="venue">
+        <button class="quick-pill" data-value="have" onclick="selectPill(this)">📍 J'ai un lieu</button>
+        <button class="quick-pill" data-value="zone" onclick="selectPill(this)">🗺️ Une zone, pas un lieu</button>
+        <button class="quick-pill" data-value="find" onclick="selectPill(this)">✨ Trouvez-moi le lieu idéal</button>
+      </div>
+      <div style="margin-top: 20px;">
+        <input type="text" class="text-input" id="venue-details" placeholder="Ville, région, ou nom du lieu">
+      </div>
+    </div>
+
+    <div class="act-nav">
+      <button class="btn btn-ghost" onclick="goToScreen('prologue')">← Prologue</button>
+      <span class="nav-meta">Acte I <em>sur</em> VII</span>
+      <button class="btn btn-primary btn-arrow" onclick="goToScreen('act-2')">Acte II</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ACTE II — LES PERSONNAGES
+     ============================================================ -->
+<section class="screen" id="screen-act-2">
+  <div class="screen-inner">
+    <div class="act-header">
+      <span class="act-label">Acte II</span>
+      <h2 class="act-title">Les <em>Personnages</em></h2>
+      <p class="act-subtitle">Qui sera sur scène avec vous, et combien seront-ils ?</p>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">07</span>
+        <span class="question-text">Qui sera <em>présent</em> ?</span>
+      </div>
+      <div class="card-grid" data-multi="true" data-field="audience-types">
+        <div class="card" data-value="collab" onclick="toggleCard(this)">
+          <span class="card-icon">👥</span>
+          <div class="card-label">Collaborateurs internes</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="clients" onclick="toggleCard(this)">
+          <span class="card-icon">🤝</span>
+          <div class="card-label">Clients / prospects</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="partners" onclick="toggleCard(this)">
+          <span class="card-icon">🔗</span>
+          <div class="card-label">Partenaires</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="public" onclick="toggleCard(this)">
+          <span class="card-icon">🎭</span>
+          <div class="card-label">Grand public</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="press" onclick="toggleCard(this)">
+          <span class="card-icon">📰</span>
+          <div class="card-label">Presse / influenceurs</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="vip" onclick="toggleCard(this)">
+          <span class="card-icon">🏆</span>
+          <div class="card-label">VIP / décideurs</div>
+          <div class="card-check">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">08</span>
+        <span class="question-text">Combien de <em>personnes</em> attendez-vous ?</span>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Nombre de participants</span>
+          <span class="slider-value" id="size-value">150 personnes</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="audience-size" min="10" max="2000" step="10" value="150" oninput="updateSize(this.value)">
+        </div>
+        <div class="slider-labels">
+          <span>Intime</span>
+          <span>Gigantesque</span>
+        </div>
+      </div>
+      <div class="quick-options" data-group="size-quick">
+        <button class="quick-pill" data-value="30" onclick="jumpSize(this, 30)">Intime (< 30)</button>
+        <button class="quick-pill" data-value="100" onclick="jumpSize(this, 100)">Moyen (30-150)</button>
+        <button class="quick-pill" data-value="350" onclick="jumpSize(this, 350)">Grand (150-500)</button>
+        <button class="quick-pill" data-value="1000" onclick="jumpSize(this, 1000)">Très grand (500+)</button>
+        <button class="quick-pill" data-value="unknown" onclick="selectPill(this)">Pas encore certain</button>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">09</span>
+        <span class="question-text">Des <em>profils particuliers</em> à soigner ?</span>
+      </div>
+      <p class="question-hint">PMR, international, presse, CODIR… ou laissez vide si rien de spécial.</p>
+      <textarea class="text-area" id="special-profiles" placeholder="Ex : accessibilité PMR pour 5 personnes, traduction simultanée français-anglais…"></textarea>
+    </div>
+
+    <div class="act-nav">
+      <button class="btn btn-ghost" onclick="goToScreen('act-1')">← Acte I</button>
+      <span class="nav-meta">Acte II <em>sur</em> VII</span>
+      <button class="btn btn-primary btn-arrow" onclick="goToScreen('act-3')">Acte III</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ACTE III — L'INTRIGUE
+     ============================================================ -->
+<section class="screen" id="screen-act-3">
+  <div class="screen-inner">
+    <div class="act-header">
+      <span class="act-label">Acte III</span>
+      <h2 class="act-title">L'<em>Intrigue</em></h2>
+      <p class="act-subtitle">Le cœur battant de votre scénario : les émotions, l'objectif, le message.</p>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">10</span>
+        <span class="question-text">Quelle <em>émotion</em> voulez-vous laisser en mémoire ?</span>
+      </div>
+      <p class="question-hint">Choisissez jusqu'à 3 émotions.</p>
+      <div class="emotion-cloud" id="emotion-cloud">
+        <button class="emotion-chip" data-value="emerveillement" onclick="toggleEmotion(this)">Émerveillement</button>
+        <button class="emotion-chip" data-value="fierte" onclick="toggleEmotion(this)">Fierté</button>
+        <button class="emotion-chip" data-value="connexion" onclick="toggleEmotion(this)">Connexion</button>
+        <button class="emotion-chip" data-value="energie" onclick="toggleEmotion(this)">Énergie</button>
+        <button class="emotion-chip" data-value="elegance" onclick="toggleEmotion(this)">Élégance</button>
+        <button class="emotion-chip" data-value="surprise" onclick="toggleEmotion(this)">Surprise</button>
+        <button class="emotion-chip" data-value="reconfort" onclick="toggleEmotion(this)">Réconfort</button>
+        <button class="emotion-chip" data-value="audace" onclick="toggleEmotion(this)">Audace</button>
+        <button class="emotion-chip" data-value="rire" onclick="toggleEmotion(this)">Rire</button>
+        <button class="emotion-chip" data-value="reflexion" onclick="toggleEmotion(this)">Réflexion</button>
+        <button class="emotion-chip" data-value="prestige" onclick="toggleEmotion(this)">Prestige</button>
+        <button class="emotion-chip" data-value="fete" onclick="toggleEmotion(this)">Fête</button>
+        <button class="emotion-chip" data-value="chaleur" onclick="toggleEmotion(this)">Chaleur</button>
+        <button class="emotion-chip" data-value="urgence" onclick="toggleEmotion(this)">Urgence</button>
+      </div>
+      <div class="emotion-counter">
+        <strong id="emotion-count">0</strong> / 3 émotions sélectionnées
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">11</span>
+        <span class="question-text">Quel est <em>l'objectif business</em> ?</span>
+      </div>
+      <div class="card-grid" data-multi="true" data-field="objectives">
+        <div class="card" data-value="cohesion" onclick="toggleCard(this)">
+          <span class="card-icon">🤗</span>
+          <div class="card-label">Souder et motiver</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="fidelisation" onclick="toggleCard(this)">
+          <span class="card-icon">💎</span>
+          <div class="card-label">Fidéliser des clients</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="acquisition" onclick="toggleCard(this)">
+          <span class="card-icon">🎯</span>
+          <div class="card-label">Conquérir / leads</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="lancement" onclick="toggleCard(this)">
+          <span class="card-icon">🚀</span>
+          <div class="card-label">Lancer un produit</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="celebration" onclick="toggleCard(this)">
+          <span class="card-icon">🎊</span>
+          <div class="card-label">Célébrer un cap</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="image" onclick="toggleCard(this)">
+          <span class="card-icon">🌟</span>
+          <div class="card-label">Renforcer l'image</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="formation" onclick="toggleCard(this)">
+          <span class="card-icon">📚</span>
+          <div class="card-label">Former / transmettre</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="remerciement" onclick="toggleCard(this)">
+          <span class="card-icon">🙏</span>
+          <div class="card-label">Remercier</div>
+          <div class="card-check">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">12</span>
+        <span class="question-text">Quel <em>message</em> doit rester ?</span>
+      </div>
+      <div class="input-with-voice">
+        <textarea class="text-area" id="key-message" placeholder="Ex : &quot;On est plus forts ensemble&quot;, &quot;Notre marque ose&quot;, &quot;L'innovation, c'est nous&quot;…"></textarea>
+        <button class="voice-btn" style="top: 16px; transform: none;" onclick="toggleVoice(this, 'key-message')" title="Dicter">🎙</button>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">13</span>
+        <span class="question-text">Quel <em>ton</em> souhaité ?</span>
+      </div>
+      <div class="bipolar-slider">
+        <div class="bipolar-labels"><span>Formel</span><span>Décontracté</span></div>
+        <div class="range-wrap">
+          <input type="range" id="tone-1" min="-5" max="5" value="0" oninput="updateTone(1, this.value)">
+        </div>
+      </div>
+      <div class="bipolar-slider">
+        <div class="bipolar-labels"><span>Festif</span><span>Solennel</span></div>
+        <div class="range-wrap">
+          <input type="range" id="tone-2" min="-5" max="5" value="0" oninput="updateTone(2, this.value)">
+        </div>
+      </div>
+      <div class="bipolar-slider">
+        <div class="bipolar-labels"><span>Classique</span><span>Audacieux</span></div>
+        <div class="range-wrap">
+          <input type="range" id="tone-3" min="-5" max="5" value="0" oninput="updateTone(3, this.value)">
+        </div>
+      </div>
+      <div class="bipolar-slider">
+        <div class="bipolar-labels"><span>Intime</span><span>Spectaculaire</span></div>
+        <div class="range-wrap">
+          <input type="range" id="tone-4" min="-5" max="5" value="0" oninput="updateTone(4, this.value)">
+        </div>
+      </div>
+    </div>
+
+    <div class="act-nav">
+      <button class="btn btn-ghost" onclick="goToScreen('act-2')">← Acte II</button>
+      <span class="nav-meta">Acte III <em>sur</em> VII</span>
+      <button class="btn btn-primary btn-arrow" onclick="goToScreen('act-4')">Acte IV</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ACTE IV — LA MISE EN SCÈNE
+     ============================================================ -->
+<section class="screen" id="screen-act-4">
+  <div class="screen-inner">
+    <div class="act-header">
+      <span class="act-label">Acte IV</span>
+      <h2 class="act-title">La <em>Mise en Scène</em></h2>
+      <p class="act-subtitle">Animation, restauration, technique : les briques qui donnent vie.</p>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">14</span>
+        <span class="question-text">Comment <em>animer la scène</em> ?</span>
+      </div>
+      <div class="card-grid" data-multi="true" data-field="animations">
+        <div class="card" data-value="keynote" onclick="toggleCard(this)">
+          <span class="card-icon">🎤</span>
+          <div class="card-label">Conférencier / keynote</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="spectacle" onclick="toggleCard(this)">
+          <span class="card-icon">🎭</span>
+          <div class="card-label">Spectacle / artistes</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="concert-dj" onclick="toggleCard(this)">
+          <span class="card-icon">🎧</span>
+          <div class="card-label">Concert / DJ</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="teambuilding" onclick="toggleCard(this)">
+          <span class="card-icon">🎲</span>
+          <div class="card-label">Team building / jeux</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="cocktail" onclick="toggleCard(this)">
+          <span class="card-icon">🍾</span>
+          <div class="card-label">Cocktail / networking</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="video" onclick="toggleCard(this)">
+          <span class="card-icon">🎬</span>
+          <div class="card-label">Vidéo / projections</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="danse" onclick="toggleCard(this)">
+          <span class="card-icon">💃</span>
+          <div class="card-label">Soirée dansante</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="remise" onclick="toggleCard(this)">
+          <span class="card-icon">🏆</span>
+          <div class="card-label">Remise de prix</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="immersif" onclick="toggleCard(this)">
+          <span class="card-icon">🕶️</span>
+          <div class="card-label">Immersif VR/AR</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="surprise" onclick="toggleCard(this)">
+          <span class="card-icon">✨</span>
+          <div class="card-label">Effet waouh</div>
+          <div class="card-check">✓</div>
+        </div>
+      </div>
+      <button class="dice-btn" onclick="rollDice('animations')">
+        <span class="dice-icon">🎲</span>
+        <span>Surprise-moi</span>
+      </button>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">15</span>
+        <span class="question-text">Et <em>côté bouche</em> ?</span>
+      </div>
+      <div class="quick-options" data-group="catering">
+        <button class="quick-pill" data-value="cocktail-dej" onclick="selectPill(this)">🥂 Cocktail déjeunatoire</button>
+        <button class="quick-pill" data-value="cocktail-din" onclick="selectPill(this)">🍸 Cocktail dînatoire</button>
+        <button class="quick-pill" data-value="assis" onclick="selectPill(this)">🍽️ Repas assis</button>
+        <button class="quick-pill" data-value="buffet" onclick="selectPill(this)">🥗 Buffet</button>
+        <button class="quick-pill" data-value="street" onclick="selectPill(this)">🌮 Street-food</button>
+        <button class="quick-pill" data-value="brunch" onclick="selectPill(this)">🥞 Brunch</button>
+        <button class="quick-pill" data-value="cafe" onclick="selectPill(this)">☕ Café / pauses</button>
+        <button class="quick-pill" data-value="none" onclick="selectPill(this)">Pas de restauration</button>
+        <button class="quick-pill" data-value="tbd" onclick="selectPill(this)">À définir</button>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">16</span>
+        <span class="question-text">Quel niveau de <em>production technique</em> ?</span>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">🔊 Son</span>
+          <span class="slider-value" id="tech-sound-val">Modéré</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="tech-sound" min="0" max="5" value="2" oninput="updateTech('sound', this.value)">
+        </div>
+        <div class="slider-labels"><span>Simple</span><span>Gros live</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">💡 Lumière</span>
+          <span class="slider-value" id="tech-light-val">Modéré</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="tech-light" min="0" max="5" value="2" oninput="updateTech('light', this.value)">
+        </div>
+        <div class="slider-labels"><span>Ambiance</span><span>Scéno lumière</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">📺 Vidéo</span>
+          <span class="slider-value" id="tech-video-val">Modéré</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="tech-video" min="0" max="5" value="2" oninput="updateTech('video', this.value)">
+        </div>
+        <div class="slider-labels"><span>Écran basique</span><span>Mapping / LED</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">🎨 Scénographie</span>
+          <span class="slider-value" id="tech-scene-val">Modéré</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="tech-scene" min="0" max="5" value="2" oninput="updateTech('scene', this.value)">
+        </div>
+        <div class="slider-labels"><span>Standard</span><span>Sur mesure</span></div>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">17</span>
+        <span class="question-text">Engagement <em>éco-responsable</em> ?</span>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">🌿 Niveau RSE</span>
+          <span class="slider-value" id="rse-val">Important</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="rse-level" min="0" max="3" value="2" oninput="updateRSE(this.value)">
+        </div>
+        <div class="slider-labels"><span>Indifférent</span><span>Critère majeur</span></div>
+      </div>
+    </div>
+
+    <div class="act-nav">
+      <button class="btn btn-ghost" onclick="goToScreen('act-3')">← Acte III</button>
+      <span class="nav-meta">Acte IV <em>sur</em> VII</span>
+      <button class="btn btn-primary btn-arrow" onclick="goToScreen('act-5')">Acte V</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ACTE V — LES MOYENS
+     ============================================================ -->
+<section class="screen" id="screen-act-5">
+  <div class="screen-inner">
+    <div class="act-header">
+      <span class="act-label">Acte V</span>
+      <h2 class="act-title">Les <em>Moyens</em></h2>
+      <p class="act-subtitle">Budget, périmètre et décision : parlons concret.</p>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">18</span>
+        <span class="question-text">Quel <em>budget</em> avez-vous en tête ?</span>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-name">Budget événement</span>
+          <span class="slider-value" id="budget-val">50 000 €</span>
+        </div>
+        <div class="range-wrap">
+          <input type="range" id="budget" min="5000" max="500000" step="5000" value="50000" oninput="updateBudget(this.value)">
+        </div>
+        <div class="slider-labels"><span>5 k€</span><span>500 k€+</span></div>
+      </div>
+      <div class="quick-options" data-group="budget-confidence">
+        <button class="quick-pill" data-value="defined" onclick="selectPill(this)">C'est défini</button>
+        <button class="quick-pill" data-value="range" onclick="selectPill(this)">C'est une fourchette</button>
+        <button class="quick-pill" data-value="discussion" onclick="selectPill(this)">À discuter ensemble</button>
+        <button class="quick-pill" data-value="confidential" onclick="selectPill(this)">Confidentiel pour l'instant</button>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">19</span>
+        <span class="question-text">Vous avez besoin de nous sur <em>quel périmètre</em> ?</span>
+      </div>
+      <div class="card-grid" data-multi="true" data-field="scope">
+        <div class="card" data-value="conseil" onclick="toggleCard(this)">
+          <span class="card-icon">💭</span>
+          <div class="card-label">Conseil / stratégie</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="creation" onclick="toggleCard(this)">
+          <span class="card-icon">🎨</span>
+          <div class="card-label">Production créative</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="prestataires" onclick="toggleCard(this)">
+          <span class="card-icon">🔧</span>
+          <div class="card-label">Prestataires techniques</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="artistes" onclick="toggleCard(this)">
+          <span class="card-icon">🎭</span>
+          <div class="card-label">Diffusion artistes</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="logistique" onclick="toggleCard(this)">
+          <span class="card-icon">📦</span>
+          <div class="card-label">Logistique & accueil</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="communication" onclick="toggleCard(this)">
+          <span class="card-icon">📢</span>
+          <div class="card-label">Communication</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="captation" onclick="toggleCard(this)">
+          <span class="card-icon">📸</span>
+          <div class="card-label">Captation photo/vidéo</div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="card" data-value="cleenmain" onclick="toggleCard(this)">
+          <span class="card-icon">🔑</span>
+          <div class="card-label">Clé en main</div>
+          <div class="card-check">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">20</span>
+        <span class="question-text">Qui <em>décide</em> in fine ?</span>
+      </div>
+      <div class="quick-options" data-group="decision-mode">
+        <button class="quick-pill" data-value="alone" onclick="selectPill(this)">Moi seul</button>
+        <button class="quick-pill" data-value="direction" onclick="selectPill(this)">Moi + ma direction</button>
+        <button class="quick-pill" data-value="committee" onclick="selectPill(this)">Un comité</button>
+        <button class="quick-pill" data-value="tender" onclick="selectPill(this)">Appel d'offres</button>
+      </div>
+      <p class="question-hint">Timeline de décision</p>
+      <div class="quick-options" data-group="decision-timeline">
+        <button class="quick-pill" data-value="fast" onclick="selectPill(this)">Sous 15 jours</button>
+        <button class="quick-pill" data-value="month" onclick="selectPill(this)">Sous 1 mois</button>
+        <button class="quick-pill" data-value="quarter" onclick="selectPill(this)">2-3 mois</button>
+        <button class="quick-pill" data-value="open" onclick="selectPill(this)">Pas de deadline</button>
+      </div>
+    </div>
+
+    <div class="question-block visible">
+      <div class="question-label">
+        <span class="question-number">21</span>
+        <span class="question-text"><em>Contraintes</em> particulières ?</span>
+      </div>
+      <p class="question-hint">Secteur régulé, charte stricte, confidentialité, appel d'offres en cours…</p>
+      <textarea class="text-area" id="constraints" placeholder="Tout ce qu'il nous faut savoir pour bien vous accompagner."></textarea>
+    </div>
+
+    <div class="act-nav">
+      <button class="btn btn-ghost" onclick="goToScreen('act-4')">← Acte IV</button>
+      <span class="nav-meta">Dernier <em>acte</em> avant l'épilogue</span>
+      <button class="btn btn-primary btn-arrow" onclick="goToEpilogue()">Révéler mon scénario</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EPILOGUE — THE REVEAL
+     ============================================================ -->
+<section class="screen" id="screen-epilogue">
+  <div class="screen-inner epilogue-inner">
+    <div class="reveal-header">
+      <div class="reveal-kicker">— Épilogue —</div>
+      <h2 class="reveal-title">Votre <em>scénario</em>.</h2>
+      <p class="reveal-sub">
+        Voici le brief que Mad in Event a construit avec vous.
+        Un conseiller vous rappelle dans les plus brefs délais.
+      </p>
+    </div>
+
+    <!-- Brief card 1: Synopsis -->
+    <div class="brief-card" id="brief-card-1">
+      <div class="brief-card-header">
+        <span class="brief-ref" id="brief-ref">SCN-2026-0000</span>
+        <span class="brief-date" id="brief-date">—</span>
+      </div>
+      <div class="brief-section">
+        <div class="brief-section-title">Synopsis</div>
+        <div class="brief-synopsis" id="synopsis-text">—</div>
+      </div>
+    </div>
+
+    <!-- Brief card 2: Details -->
+    <div class="brief-card" id="brief-card-2">
+      <div class="brief-section">
+        <div class="brief-section-title">Ce que nous avons compris</div>
+        <div class="brief-grid" id="brief-details">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Brief card 3: Emotions & tone -->
+    <div class="brief-card" id="brief-card-3">
+      <div class="brief-section">
+        <div class="brief-section-title">Émotions visées</div>
+        <div class="brief-emotions" id="brief-emotions">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Brief card 4: Recommendations -->
+    <div class="brief-card" id="brief-card-4">
+      <div class="brief-section">
+        <div class="brief-section-title">Recommandations de l'équipe</div>
+        <ol class="brief-recommendations" id="brief-recs">
+          <!-- filled by JS -->
+        </ol>
+      </div>
+    </div>
+
+    <!-- Brief card 5: Score (internal-looking) -->
+    <div class="brief-card" id="brief-card-5">
+      <div class="brief-section">
+        <div class="brief-section-title">Niveau de maturité du projet</div>
+        <div class="brief-score">
+          <div class="score-circle" id="score-circle">
+            <span class="score-value" id="score-value">0</span>
+          </div>
+          <div class="score-info">
+            <div class="score-tier" id="score-tier">—</div>
+            <div class="score-desc" id="score-desc">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="badge-row" id="badge-row">
+      <!-- badges filled by JS -->
+    </div>
+
+    <div class="final-actions">
+      <button class="btn btn-primary btn-arrow" onclick="downloadBrief()">
+        📄 Recevoir mon brief complet
+      </button>
+      <button class="btn btn-ghost" onclick="restartJourney()">
+        Recommencer
+      </button>
+    </div>
+
+    <p style="text-align: center; margin-top: 64px; color: var(--ash-dim); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em;">
+      MAD IN EVENT · 9 RUE CORNEILLE · 83000 TOULON · CONTACT@MADINEVENT.COM
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SCRIPT
+     ============================================================ -->
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  mode: 'standard',
+  contact: { name: '', org: '', email: '', phone: '', slot: '' },
+  event: { types: [], dateMode: '', datePrecise: '', duration: '', venueMode: '', venueDetails: '' },
+  audience: { types: [], size: 150, sizeKnown: true, special: '' },
+  intrigue: {
+    emotions: [],
+    objectives: [],
+    message: '',
+    tone: { formel_decontracte: 0, festif_solennel: 0, classique_audacieux: 0, intime_spectaculaire: 0 }
+  },
+  staging: {
+    animations: [],
+    catering: '',
+    tech: { sound: 2, light: 2, video: 2, scene: 2 },
+    rse: 2
+  },
+  means: { budget: 50000, budgetConfidence: '', scope: [], decisionMode: '', decisionTimeline: '', constraints: '' }
+};
+
+const SCREENS = ['landing', 'prologue', 'act-1', 'act-2', 'act-3', 'act-4', 'act-5', 'epilogue'];
+const ACT_LABELS = ['', 'PROLOGUE', 'ACTE I', 'ACTE II', 'ACTE III', 'ACTE IV', 'ACTE V', 'ÉPILOGUE'];
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function startJourney(mode) {
+  state.mode = mode;
+  buildProgressDots();
+  goToScreen('prologue');
+}
+
+function goToScreen(screenName) {
+  // Curtain transition for dramatic effect
+  const curtain = document.getElementById('curtain');
+  curtain.classList.add('active');
+
+  setTimeout(() => {
+    // Hide all screens
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    // Show target
+    const target = document.getElementById('screen-' + screenName);
+    if (target) target.classList.add('active');
+    // Scroll to top
+    window.scrollTo(0, 0);
+    if (target) target.scrollTop = 0;
+    // Update progress
+    updateProgress(screenName);
+    // Remove curtain
+    setTimeout(() => curtain.classList.remove('active'), 50);
+  }, 600);
+}
+
+function buildProgressDots() {
+  const container = document.getElementById('progress-dots');
+  container.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'progress-dot';
+    container.appendChild(dot);
+  }
+}
+
+function updateProgress(screenName) {
+  const progress = document.getElementById('progress');
+  const label = document.getElementById('progress-label');
+  const dots = document.querySelectorAll('.progress-dot');
+
+  const idx = SCREENS.indexOf(screenName);
+  if (idx <= 0 || idx === SCREENS.length - 1) {
+    progress.classList.add('hidden');
+    return;
+  }
+  progress.classList.remove('hidden');
+  label.textContent = ACT_LABELS[idx];
+
+  dots.forEach((dot, i) => {
+    dot.classList.remove('current', 'done');
+    if (i < idx - 1) dot.classList.add('done');
+    else if (i === idx - 1) dot.classList.add('current');
+  });
+}
+
+/* ============================================================
+   CARD SELECTION (multi-select)
+   ============================================================ */
+function toggleCard(el) {
+  const parent = el.closest('[data-multi]');
+  const isMulti = parent.dataset.multi === 'true';
+  const field = parent.dataset.field;
+
+  if (!isMulti) {
+    parent.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+  }
+  el.classList.toggle('selected');
+
+  // Update state
+  const selected = Array.from(parent.querySelectorAll('.card.selected')).map(c => c.dataset.value);
+  setStateField(field, selected);
+}
+
+function setStateField(field, value) {
+  const map = {
+    'event-types': () => state.event.types = value,
+    'audience-types': () => state.audience.types = value,
+    'objectives': () => state.intrigue.objectives = value,
+    'animations': () => state.staging.animations = value,
+    'scope': () => state.means.scope = value
+  };
+  if (map[field]) map[field]();
+}
+
+/* ============================================================
+   PILL SELECTION (single)
+   ============================================================ */
+function selectPill(el) {
+  const parent = el.closest('[data-group]');
+  const group = parent.dataset.group;
+  parent.querySelectorAll('.quick-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+
+  const value = el.dataset.value;
+  const map = {
+    'slot': v => state.contact.slot = v,
+    'date': v => state.event.dateMode = v,
+    'duration': v => state.event.duration = v,
+    'venue': v => state.event.venueMode = v,
+    'size-quick': v => {
+      if (v === 'unknown') state.audience.sizeKnown = false;
+      else state.audience.sizeKnown = true;
+    },
+    'catering': v => state.staging.catering = v,
+    'budget-confidence': v => state.means.budgetConfidence = v,
+    'decision-mode': v => state.means.decisionMode = v,
+    'decision-timeline': v => state.means.decisionTimeline = v
+  };
+  if (map[group]) map[group](value);
+}
+
+function jumpSize(el, size) {
+  selectPill(el);
+  document.getElementById('audience-size').value = size;
+  updateSize(size);
+  state.audience.sizeKnown = true;
+}
+
+/* ============================================================
+   EMOTION CHIPS (max 3)
+   ============================================================ */
+function toggleEmotion(el) {
+  const isSelected = el.classList.contains('selected');
+  const selectedCount = document.querySelectorAll('.emotion-chip.selected').length;
+
+  if (!isSelected && selectedCount >= 3) return;
+  el.classList.toggle('selected');
+
+  const selected = Array.from(document.querySelectorAll('.emotion-chip.selected')).map(c => c.dataset.value);
+  state.intrigue.emotions = selected;
+  document.getElementById('emotion-count').textContent = selected.length;
+
+  // Disable others if max reached
+  const chips = document.querySelectorAll('.emotion-chip:not(.selected)');
+  if (selected.length >= 3) chips.forEach(c => c.classList.add('disabled'));
+  else chips.forEach(c => c.classList.remove('disabled'));
+}
+
+/* ============================================================
+   SLIDERS
+   ============================================================ */
+function updateSize(val) {
+  val = parseInt(val);
+  state.audience.size = val;
+  let label;
+  if (val < 30) label = `${val} personnes · intime`;
+  else if (val < 150) label = `${val} personnes · format moyen`;
+  else if (val < 500) label = `${val} personnes · grand format`;
+  else label = `${val} personnes · très grand format`;
+  document.getElementById('size-value').textContent = label;
+}
+
+function updateTone(n, val) {
+  const keys = ['', 'formel_decontracte', 'festif_solennel', 'classique_audacieux', 'intime_spectaculaire'];
+  state.intrigue.tone[keys[n]] = parseInt(val);
+}
+
+function updateTech(type, val) {
+  val = parseInt(val);
+  state.staging.tech[type] = val;
+  const labels = ['Basique', 'Léger', 'Modéré', 'Soutenu', 'Premium', 'Spectaculaire'];
+  document.getElementById(`tech-${type === 'scene' ? 'scene' : type}-val`).textContent = labels[val];
+}
+
+function updateRSE(val) {
+  val = parseInt(val);
+  state.staging.rse = val;
+  const labels = ['Indifférent', 'Nice to have', 'Important', 'Critère majeur'];
+  document.getElementById('rse-val').textContent = labels[val];
+}
+
+function updateBudget(val) {
+  val = parseInt(val);
+  state.means.budget = val;
+  const formatted = val.toLocaleString('fr-FR');
+  document.getElementById('budget-val').textContent = `${formatted} €`;
+}
+
+/* ============================================================
+   DICE (Surprise-me)
+   ============================================================ */
+function rollDice(field) {
+  const container = document.querySelector(`[data-field="${field}"]`);
+  if (!container) return;
+  const cards = container.querySelectorAll('.card');
+  // Unselect all
+  cards.forEach(c => c.classList.remove('selected'));
+  // Pick 1-2 random
+  const count = Math.random() > 0.5 ? 2 : 1;
+  const shuffled = Array.from(cards).sort(() => Math.random() - 0.5);
+  shuffled.slice(0, count).forEach(c => {
+    setTimeout(() => c.classList.add('selected'), 100 + Math.random() * 400);
+  });
+  // Update state
+  setTimeout(() => {
+    const selected = Array.from(container.querySelectorAll('.card.selected')).map(c => c.dataset.value);
+    setStateField(field, selected);
+  }, 600);
+}
+
+/* ============================================================
+   VOICE INPUT (visual demo — real Web Speech API if available)
+   ============================================================ */
+function toggleVoice(btn, targetId) {
+  const target = document.getElementById(targetId);
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('La saisie vocale n\'est pas disponible sur ce navigateur. Utilisez Chrome, Edge ou Safari récent.');
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SpeechRecognition();
+  rec.lang = 'fr-FR';
+  rec.interimResults = true;
+  rec.continuous = false;
+
+  btn.classList.add('active');
+
+  rec.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') {
+      target.value = transcript;
+    }
+  };
+  rec.onend = () => btn.classList.remove('active');
+  rec.onerror = () => btn.classList.remove('active');
+  rec.start();
+}
+
+/* ============================================================
+   EPILOGUE — BUILD & REVEAL
+   ============================================================ */
+function goToEpilogue() {
+  // Collect remaining text fields
+  state.contact.name = document.getElementById('contact-name').value;
+  state.contact.org = document.getElementById('contact-org').value;
+  state.contact.email = document.getElementById('contact-email').value;
+  state.contact.phone = document.getElementById('contact-phone').value;
+  state.event.venueDetails = document.getElementById('venue-details').value;
+  state.event.datePrecise = document.getElementById('event-date-precise').value;
+  state.audience.special = document.getElementById('special-profiles').value;
+  state.intrigue.message = document.getElementById('key-message').value;
+  state.means.constraints = document.getElementById('constraints').value;
+
+  buildBrief();
+  goToScreen('epilogue');
+
+  // Staggered reveal of brief cards
+  setTimeout(() => {
+    for (let i = 1; i <= 5; i++) {
+      setTimeout(() => {
+        const card = document.getElementById(`brief-card-${i}`);
+        if (card) card.classList.add('visible');
+      }, i * 400);
+    }
+  }, 900);
+}
+
+function buildBrief() {
+  // Reference
+  const year = new Date().getFullYear();
+  const ref = `SCN-${year}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`;
+  document.getElementById('brief-ref').textContent = ref;
+
+  // Date
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('brief-date').textContent = dateStr.toUpperCase();
+
+  // Synopsis
+  document.getElementById('synopsis-text').innerHTML = buildSynopsis();
+
+  // Details grid
+  document.getElementById('brief-details').innerHTML = buildDetails();
+
+  // Emotions
+  document.getElementById('brief-emotions').innerHTML = buildEmotions();
+
+  // Recommendations
+  document.getElementById('brief-recs').innerHTML = buildRecommendations();
+
+  // Score
+  const score = calculateScore();
+  buildScore(score);
+
+  // Badges
+  document.getElementById('badge-row').innerHTML = buildBadges(score);
+}
+
+function buildSynopsis() {
+  const name = state.contact.name || 'Votre équipe';
+  const org = state.contact.org ? ` (${state.contact.org})` : '';
+  const typeMap = {
+    seminaire: 'un séminaire', soiree: 'une soirée d\'entreprise', lancement: 'un lancement de produit',
+    congres: 'un congrès', festival: 'un festival', concert: 'un concert',
+    'soiree-privee': 'une soirée privée', autre: 'un événement sur mesure'
+  };
+  const types = state.event.types.length > 0
+    ? state.event.types.map(t => typeMap[t] || t).join(' et ')
+    : 'un événement';
+
+  const size = state.audience.sizeKnown
+    ? `environ <em>${state.audience.size}</em> personnes`
+    : 'un public à préciser';
+
+  const dateMap = {
+    '3months': 'dans les 3 mois', 'thisyear': 'cette année', 'nextyear': 'l\'année prochaine', 'flexible': 'à une date encore flexible'
+  };
+  const dateStr = state.event.datePrecise
+    ? `prévu le ${state.event.datePrecise}`
+    : state.event.dateMode
+    ? `prévu ${dateMap[state.event.dateMode] || ''}`
+    : '';
+
+  const emStr = state.intrigue.emotions.length > 0
+    ? ` Tonalité recherchée : <em>${state.intrigue.emotions.map(labelEmotion).join(', ')}</em>.`
+    : '';
+
+  return `${name}${org} souhaite concevoir ${types} pour ${size}, ${dateStr}.${emStr}`;
+}
+
+function labelEmotion(key) {
+  const map = {
+    emerveillement: 'émerveillement', fierte: 'fierté', connexion: 'connexion',
+    energie: 'énergie', elegance: 'élégance', surprise: 'surprise',
+    reconfort: 'réconfort', audace: 'audace', rire: 'rire',
+    reflexion: 'réflexion', prestige: 'prestige', fete: 'fête',
+    chaleur: 'chaleur', urgence: 'urgence'
+  };
+  return map[key] || key;
+}
+
+function buildDetails() {
+  const fields = [];
+
+  if (state.event.types.length > 0) {
+    const typeMap = {
+      seminaire: 'Séminaire', soiree: 'Soirée d\'entreprise', lancement: 'Lancement',
+      congres: 'Congrès', festival: 'Festival', concert: 'Concert',
+      'soiree-privee': 'Soirée privée', autre: 'Sur mesure'
+    };
+    fields.push(['Type', state.event.types.map(t => typeMap[t]).join(' · ')]);
+  }
+
+  if (state.event.datePrecise || state.event.dateMode) {
+    const dateMap = { '3months': 'Dans 3 mois', thisyear: 'Cette année', nextyear: 'L\'année prochaine', flexible: 'Flexible' };
+    fields.push(['Date', state.event.datePrecise || dateMap[state.event.dateMode] || '—']);
+  }
+
+  if (state.event.duration) {
+    const durMap = { evening: 'Une soirée', day: 'Une journée', weekend: '2-3 jours', long: '+ de 3 jours' };
+    fields.push(['Durée', durMap[state.event.duration] || '—']);
+  }
+
+  if (state.event.venueDetails || state.event.venueMode) {
+    const vMap = { have: 'Lieu confirmé', zone: 'Zone définie', find: 'À trouver avec MIE' };
+    const value = state.event.venueDetails || vMap[state.event.venueMode] || '—';
+    fields.push(['Lieu', value]);
+  }
+
+  if (state.audience.size && state.audience.sizeKnown) {
+    fields.push(['Participants', `${state.audience.size} personnes`]);
+  }
+
+  if (state.audience.types.length > 0) {
+    const aMap = { collab: 'Collaborateurs', clients: 'Clients', partners: 'Partenaires', public: 'Grand public', press: 'Presse', vip: 'VIP' };
+    fields.push(['Public', state.audience.types.map(a => aMap[a]).join(' · ')]);
+  }
+
+  if (state.intrigue.objectives.length > 0) {
+    const oMap = {
+      cohesion: 'Cohésion', fidelisation: 'Fidélisation', acquisition: 'Acquisition',
+      lancement: 'Lancement', celebration: 'Célébration', image: 'Image',
+      formation: 'Formation', remerciement: 'Remerciement'
+    };
+    fields.push(['Objectifs', state.intrigue.objectives.map(o => oMap[o]).join(' · ')]);
+  }
+
+  if (state.staging.animations.length > 0) {
+    const aniMap = {
+      keynote: 'Keynote', spectacle: 'Spectacle', 'concert-dj': 'Concert/DJ',
+      teambuilding: 'Team building', cocktail: 'Cocktail', video: 'Vidéo',
+      danse: 'Danse', remise: 'Remise de prix', immersif: 'Immersif', surprise: 'Surprise'
+    };
+    fields.push(['Animations', state.staging.animations.map(a => aniMap[a]).join(' · ')]);
+  }
+
+  if (state.staging.catering) {
+    const cMap = {
+      'cocktail-dej': 'Cocktail déjeunatoire', 'cocktail-din': 'Cocktail dînatoire',
+      assis: 'Repas assis', buffet: 'Buffet', street: 'Street-food',
+      brunch: 'Brunch', cafe: 'Café / pauses', none: 'Pas de restauration', tbd: 'À définir'
+    };
+    fields.push(['Restauration', cMap[state.staging.catering] || '—']);
+  }
+
+  if (state.means.budget && state.means.budgetConfidence !== 'confidential') {
+    const formatted = state.means.budget.toLocaleString('fr-FR');
+    const bcMap = { defined: '(défini)', range: '(fourchette)', discussion: '(à discuter)' };
+    fields.push(['Budget', `${formatted} € ${bcMap[state.means.budgetConfidence] || ''}`]);
+  } else if (state.means.budgetConfidence === 'confidential') {
+    fields.push(['Budget', 'Confidentiel']);
+  }
+
+  if (state.means.scope.length > 0) {
+    const sMap = {
+      conseil: 'Conseil', creation: 'Création', prestataires: 'Prestataires',
+      artistes: 'Artistes', logistique: 'Logistique', communication: 'Communication',
+      captation: 'Captation', cleenmain: 'Clé en main'
+    };
+    fields.push(['Périmètre', state.means.scope.map(s => sMap[s]).join(' · ')]);
+  }
+
+  if (state.means.decisionTimeline) {
+    const dtMap = { fast: '< 15 jours', month: '< 1 mois', quarter: '2-3 mois', open: 'Pas de deadline' };
+    fields.push(['Décision', dtMap[state.means.decisionTimeline]]);
+  }
+
+  if (state.staging.rse >= 2) {
+    const rseLabels = ['—', '—', 'Important', 'Critère majeur'];
+    fields.push(['Engagement RSE', rseLabels[state.staging.rse]]);
+  }
+
+  return fields.map(([label, value]) => `
+    <div class="brief-field">
+      <div class="brief-field-label">${label}</div>
+      <div class="brief-field-value">${value}</div>
+    </div>
+  `).join('');
+}
+
+function buildEmotions() {
+  if (state.intrigue.emotions.length === 0) {
+    return '<p style="color: var(--ash); font-style: italic;">À préciser avec le conseiller.</p>';
+  }
+  return state.intrigue.emotions.map(e =>
+    `<span class="brief-emotion-pill">${labelEmotion(e)}</span>`
+  ).join('');
+}
+
+function buildRecommendations() {
+  const recs = [];
+  const types = state.event.types;
+  const animations = state.staging.animations;
+  const emotions = state.intrigue.emotions;
+  const rse = state.staging.rse;
+  const audSize = state.audience.size;
+  const techHigh = Object.values(state.staging.tech).some(v => v >= 4);
+
+  // Template-based but contextual
+  if (types.includes('soiree') || types.includes('lancement')) {
+    recs.push({
+      title: 'Une ouverture théâtrale',
+      text: 'Une <strong>arrivée scénographiée</strong> (quatuor à cordes, percussions live ou comédien d\'accueil selon le ton) pour installer immédiatement l\'émotion et positionner la soirée comme un événement marquant.'
+    });
+  }
+
+  if (types.includes('seminaire')) {
+    recs.push({
+      title: 'Respirer, puis embarquer',
+      text: 'Une <strong>journée rythmée en trois temps</strong> : un moment de rassemblement fort le matin, des ateliers en formats courts pour maintenir l\'attention, et une soirée qui relâche la pression tout en scellant la cohésion.'
+    });
+  }
+
+  if (animations.includes('immersif') || techHigh) {
+    recs.push({
+      title: 'L\'effet waouh technique',
+      text: 'Un <strong>mapping vidéo</strong> sur la façade ou un dispositif LED scénographié pour créer un moment de bascule émotionnel. Nos équipes techniques sont rodées à ce type de production.'
+    });
+  }
+
+  if (emotions.includes('fierte') || emotions.includes('prestige')) {
+    recs.push({
+      title: 'Le soin des détails prestige',
+      text: 'Un <strong>photocall scénographié</strong> + un photographe dédié pour ramener des souvenirs de qualité professionnelle. Ces images serviront de contenu aval pour votre communication.'
+    });
+  }
+
+  if (emotions.includes('connexion') || emotions.includes('chaleur')) {
+    recs.push({
+      title: 'Les temps humains',
+      text: 'Des <strong>formats d\'échange animés</strong> (speed-meetings structurés, ateliers co-construction) pour provoquer des conversations qui comptent plutôt que des networkings timides.'
+    });
+  }
+
+  if (rse >= 2) {
+    recs.push({
+      title: 'Une cohérence éco-responsable',
+      text: 'Un <strong>sourcing local</strong> pour la restauration, des signalétiques en matériaux réemployables, et un bilan carbone estimatif livré avec le dossier final. Aligné avec notre valeur "durable et respectueux".'
+    });
+  }
+
+  if (audSize >= 500) {
+    recs.push({
+      title: 'La logistique à grande échelle',
+      text: 'Un <strong>dispositif d\'accueil segmenté</strong> (multi-entrées, équipe d\'accueil calibrée, signalétique directionnelle) pour éviter les goulots. À ces volumes, la fluidité fait la moitié de l\'expérience.'
+    });
+  }
+
+  // Fallback if nothing triggered
+  if (recs.length === 0) {
+    recs.push({
+      title: 'Un scénario à co-construire',
+      text: 'À ce stade, nos idées seront affinées <strong>lors de notre premier échange</strong>. On vous rappelle avec quelques pistes créatives calibrées à votre contexte.'
+    });
+  }
+
+  // Keep max 4
+  return recs.slice(0, 4).map((r, i) => `
+    <li class="brief-rec-item">
+      <span class="brief-rec-num">${String(i + 1).padStart(2, '0')}</span>
+      <div class="brief-rec-text">${r.text}</div>
+    </li>
+  `).join('');
+}
+
+function calculateScore() {
+  let score = 0;
+
+  // Date
+  if (state.event.datePrecise) score += 15;
+  else if (state.event.dateMode === '3months' || state.event.dateMode === 'thisyear') score += 12;
+  else if (state.event.dateMode === 'nextyear') score += 8;
+  else if (state.event.dateMode === 'flexible') score += 3;
+
+  // Budget
+  if (state.means.budgetConfidence === 'defined') score += 25;
+  else if (state.means.budgetConfidence === 'range') score += 18;
+  else if (state.means.budgetConfidence === 'discussion') score += 10;
+  else if (state.means.budgetConfidence === 'confidential') score += 15;
+
+  // Audience
+  if (state.audience.sizeKnown) score += 10;
+  else score += 3;
+
+  // Venue
+  if (state.event.venueDetails) score += 10;
+  else if (state.event.venueMode === 'zone') score += 6;
+  else if (state.event.venueMode === 'find') score += 3;
+
+  // Objectives
+  if (state.intrigue.objectives.length > 0 && state.intrigue.objectives.length <= 2) score += 15;
+  else if (state.intrigue.objectives.length >= 3) score += 10;
+
+  // Decision
+  if (state.means.decisionMode === 'alone' || state.means.decisionMode === 'direction') score += 8;
+  else if (state.means.decisionMode === 'committee') score += 5;
+  else if (state.means.decisionMode === 'tender') score += 3;
+
+  if (state.means.decisionTimeline === 'fast') score += 10;
+  else if (state.means.decisionTimeline === 'month') score += 7;
+  else if (state.means.decisionTimeline === 'quarter') score += 4;
+
+  // Email quality
+  if (state.contact.email && !/(gmail|yahoo|hotmail|outlook)\.com$/i.test(state.contact.email)) score += 5;
+  else if (state.contact.email) score += 2;
+
+  // Emotions / maturity
+  if (state.intrigue.emotions.length > 0) score += 2;
+
+  return Math.min(100, score);
+}
+
+function buildScore(score) {
+  document.getElementById('score-value').textContent = score;
+  document.getElementById('score-circle').style.setProperty('--p', score + '%');
+
+  let tier, desc;
+  if (score >= 90) {
+    tier = 'Projet prioritaire';
+    desc = 'Rappel sous 4h. Un conseiller senior est déjà prévenu.';
+  } else if (score >= 70) {
+    tier = 'Projet avancé';
+    desc = 'Rappel sous 24h par le conseiller attribué.';
+  } else if (score >= 50) {
+    tier = 'Projet en maturation';
+    desc = 'Rappel sous 48h avec quelques propositions pour avancer.';
+  } else if (score >= 30) {
+    tier = 'Projet à affiner';
+    desc = 'On vous envoie de l\'inspiration et on vous recontacte quand vous êtes prêt.';
+  } else {
+    tier = 'Premier contact';
+    desc = 'Merci pour ces premières informations, on reste à votre écoute.';
+  }
+  document.getElementById('score-tier').textContent = tier;
+  document.getElementById('score-desc').textContent = desc;
+}
+
+function buildBadges(score) {
+  const badges = [];
+  if (state.intrigue.emotions.length >= 3) badges.push('🎨 Visionnaire');
+  if (state.intrigue.objectives.length >= 1 && state.intrigue.objectives.length <= 2) badges.push('🎯 Stratège');
+  if (state.staging.rse >= 3) badges.push('🌿 Éco-responsable');
+  if (state.audience.size >= 500) badges.push('🏟 Grand Format');
+  if (state.means.budget >= 100000) badges.push('💎 Premium');
+  const tones = Object.values(state.intrigue.tone);
+  if (tones.some(t => t >= 3)) badges.push('⚡ Audacieux');
+  if (score >= 80) badges.push('🔥 Projet mûr');
+
+  return badges.map(b => `<span class="badge">${b}</span>`).join('');
+}
+
+/* ============================================================
+   DOWNLOAD BRIEF (as text file)
+   ============================================================ */
+function downloadBrief() {
+  const briefText = generateBriefText();
+  const blob = new Blob([briefText], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const ref = document.getElementById('brief-ref').textContent;
+  a.download = `Brief-${ref}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Confirmation
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '✓ Brief téléchargé';
+  setTimeout(() => btn.innerHTML = originalText, 2500);
+}
+
+function generateBriefText() {
+  const ref = document.getElementById('brief-ref').textContent;
+  const date = document.getElementById('brief-date').textContent;
+
+  let text = '';
+  text += '═══════════════════════════════════════════════════\n';
+  text += '       MADE IN PROJECT — BRIEF DE SCÉNARIO\n';
+  text += '             Agence Mad in Event — Toulon\n';
+  text += '═══════════════════════════════════════════════════\n\n';
+  text += `Référence : ${ref}\n`;
+  text += `Date      : ${date}\n\n`;
+  text += '───────────────────────────────────────────────────\n';
+  text += 'CONTACT\n';
+  text += '───────────────────────────────────────────────────\n';
+  text += `Nom          : ${state.contact.name || '—'}\n`;
+  text += `Organisation : ${state.contact.org || '—'}\n`;
+  text += `Email        : ${state.contact.email || '—'}\n`;
+  text += `Téléphone    : ${state.contact.phone || '—'}\n`;
+  text += `Créneau      : ${state.contact.slot || '—'}\n\n`;
+
+  text += '───────────────────────────────────────────────────\n';
+  text += 'SYNOPSIS\n';
+  text += '───────────────────────────────────────────────────\n';
+  text += document.getElementById('synopsis-text').textContent + '\n\n';
+
+  text += '───────────────────────────────────────────────────\n';
+  text += 'DÉTAILS DU PROJET\n';
+  text += '───────────────────────────────────────────────────\n';
+  document.querySelectorAll('.brief-field').forEach(f => {
+    const label = f.querySelector('.brief-field-label').textContent;
+    const value = f.querySelector('.brief-field-value').textContent;
+    text += `${label.padEnd(14)}: ${value}\n`;
+  });
+  text += '\n';
+
+  if (state.intrigue.emotions.length > 0) {
+    text += '───────────────────────────────────────────────────\n';
+    text += 'ÉMOTIONS VISÉES\n';
+    text += '───────────────────────────────────────────────────\n';
+    text += state.intrigue.emotions.map(labelEmotion).join(', ') + '\n\n';
+  }
+
+  if (state.intrigue.message) {
+    text += '───────────────────────────────────────────────────\n';
+    text += 'MESSAGE CLÉ\n';
+    text += '───────────────────────────────────────────────────\n';
+    text += state.intrigue.message + '\n\n';
+  }
+
+  text += '───────────────────────────────────────────────────\n';
+  text += 'RECOMMANDATIONS DE L\'ÉQUIPE\n';
+  text += '───────────────────────────────────────────────────\n';
+  document.querySelectorAll('.brief-rec-item').forEach((item, i) => {
+    const textContent = item.querySelector('.brief-rec-text').textContent.trim();
+    text += `\n${i + 1}. ${textContent}\n`;
+  });
+  text += '\n';
+
+  if (state.means.constraints) {
+    text += '───────────────────────────────────────────────────\n';
+    text += 'CONTRAINTES À CONNAÎTRE\n';
+    text += '───────────────────────────────────────────────────\n';
+    text += state.means.constraints + '\n\n';
+  }
+
+  const score = document.getElementById('score-value').textContent;
+  const tier = document.getElementById('score-tier').textContent;
+  text += '───────────────────────────────────────────────────\n';
+  text += 'MATURITÉ DU PROJET\n';
+  text += '───────────────────────────────────────────────────\n';
+  text += `Score : ${score}/100 — ${tier}\n\n`;
+
+  text += '═══════════════════════════════════════════════════\n';
+  text += '  Mad in Event · 9 Rue Corneille · 83000 Toulon\n';
+  text += '  contact@madinevent.com · 04 94 20 34 24\n';
+  text += '  Brief généré par Made In Project — beta\n';
+  text += '═══════════════════════════════════════════════════\n';
+
+  return text;
+}
+
+/* ============================================================
+   RESTART
+   ============================================================ */
+function restartJourney() {
+  if (confirm('Voulez-vous vraiment recommencer ? Toutes vos réponses seront effacées.')) {
+    location.reload();
+  }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  buildProgressDots();
+
+  // Intersection observer for question fade-in
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.question-block').forEach(q => obs.observe(q));
+});
+
+// Subtle parallax on mouse move (landing only) — for atmosphere
+document.addEventListener('mousemove', (e) => {
+  const landing = document.getElementById('screen-landing');
+  if (!landing.classList.contains('active')) return;
+  const x = (e.clientX / window.innerWidth - 0.5) * 8;
+  const y = (e.clientY / window.innerHeight - 0.5) * 8;
+  document.querySelectorAll('.landing-title, .landing-title-italic').forEach(el => {
+    el.style.transform = `translate(${x}px, ${y}px)`;
+  });
+});
+</script>
+
+</body>
+</html>
