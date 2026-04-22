@@ -3844,5 +3844,54 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+
+    <script src="/js/api.js"></script>
+    <script>
+      // Intercepter la soumission du formulaire
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form') || document.querySelector('[data-form]');
+        if (form) {
+          form.addEventListener('submit', async function(e) {
+            const submitBtn = form.querySelector('[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+            
+            // Récupérer les données du formulaire
+            const formData = {
+              contact: {
+                firstname: document.querySelector('[name="firstname"]')?.value || '',
+                lastname: document.querySelector('[name="lastname"]')?.value || '',
+                email: document.querySelector('[name="email"]')?.value || '',
+                phone: document.querySelector('[name="phone"]')?.value || '',
+                org: document.querySelector('[name="org"]')?.value || '',
+                slot: document.querySelector('[name="slot"]')?.value || '',
+              },
+              event: JSON.parse(localStorage.getItem('mip_event') || '{}'),
+              audience: JSON.parse(localStorage.getItem('mip_audience') || '{}'),
+              intrigue: JSON.parse(localStorage.getItem('mip_intrigue') || '{}'),
+              staging: JSON.parse(localStorage.getItem('mip_staging') || '{}'),
+              means: JSON.parse(localStorage.getItem('mip_means') || '{}'),
+              chatAnswers: JSON.parse(localStorage.getItem('mip_chat_answers') || '{}'),
+              mode: localStorage.getItem('mip_mode') || 'standard',
+              score: parseInt(localStorage.getItem('mip_score') || '0'),
+            };
+            
+            // Envoyer à l'API
+            const result = await submitLeadToAPI(formData);
+            
+            if (result.success) {
+              console.log('Lead créé:', result.ref);
+              localStorage.setItem('mip_lead_ref', result.ref);
+              localStorage.setItem('mip_lead_id', result.id);
+              // Continuer vers epilogue
+              window.location.hash = '#epilogue';
+            } else {
+              alert('Erreur: ' + result.error);
+              if (submitBtn) submitBtn.disabled = false;
+            }
+          });
+        }
+      });
+    </script>
+
 </body>
 </html>
