@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic();
 
-export async function analyzeBrief(leadData: any) {
+export async function analyzeBrief(leadData) {
   const prompt = `Analyse ce brief commercial et fournis:
 1. Un résumé exécutif (2-3 phrases)
 2. 3-5 recommandations concrètes
@@ -32,8 +32,7 @@ Réponds en JSON avec les clés: summary, recommendations (array), attention_poi
       ],
     });
 
-    const responseText =
-      message.content[0].type === "text" ? message.content[0].text : "";
+    const responseText = message.content[0].type === "text" ? message.content[0].text : "";
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
     if (jsonMatch) {
