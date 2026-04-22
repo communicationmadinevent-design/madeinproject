@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { analyzeBrief } from "@/lib/claude";
+import { sendLeadNotification } from "@/lib/email";
 
 // POST /api/leads — Créer un nouveau lead
 export async function POST(request: NextRequest) {
@@ -63,6 +65,34 @@ export async function POST(request: NextRequest) {
       action: "lead_created",
       details: { mode, score, ref },
     });
+
+    // Analyse IA (async, pas bloquant)
+    (async () => {
+      try {
+        const analysis = await analyzeBrief(lead);
+        
+        // Mettre à jour le lead avec l'analyse
+        await supabase
+          .from("leads")
+          .update({
+            ai_analysis: JSON.stringify(analysis),
+            ai_recommendations: analysis.recommendations || [],
+          })
+          .eq("id", lead.id);
+
+        // Envoyer l'email de notification
+        await sendLeadNotification(lead, analysis);
+
+        // Log audit
+        await supabase.from("audit_logs").insert({
+          lead_id: lead.id,
+          action: "ai_analysis_completed",
+          details: { complexity: analysis.complexity },
+        });
+      } catch (err) {
+        console.error("Erreur analyse IA:", err);
+      }
+    })();
 
     return NextResponse.json({ success: true, id: lead.id, ref });
   } catch (err) {
