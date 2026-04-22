@@ -22,8 +22,8 @@ export default function AdminPage() {
   const [modeFilter, setModeFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
-  // Charger les leads
   useEffect(() => {
     fetchLeads();
   }, [search, modeFilter]);
@@ -44,7 +44,6 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  // Exporter en CSV
   function exportCSV() {
     if (!leads.length) return;
 
@@ -69,7 +68,6 @@ export default function AdminPage() {
     link.click();
   }
 
-  // Score couleur
   function scoreColor(score: number) {
     if (score >= 90) return "🔥 Prioritaire";
     if (score >= 70) return "🌤️ Avancé";
@@ -81,7 +79,6 @@ export default function AdminPage() {
     <div style={{ fontFamily: "Arial, sans-serif", padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
       <h1>Back-Office MadeInProject</h1>
 
-      {/* Toolbar */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
         <input
           type="text"
@@ -124,7 +121,6 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginBottom: "20px" }}>
         <div style={{ background: "#f5f5f5", padding: "15px", borderRadius: "8px" }}>
           <div style={{ fontSize: "12px", color: "#666" }}>Total leads</div>
@@ -144,7 +140,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div style={{ overflowX: "auto" }}>
         <table
           style={{
@@ -182,7 +177,15 @@ export default function AdminPage() {
               </tr>
             ) : (
               leads.map((lead) => (
-                <tr key={lead.id} style={{ borderBottom: "1px solid #eee", hover: { background: "#f9f9f9" } }}>
+                <tr
+                  key={lead.id}
+                  onMouseEnter={() => setHoveredRow(lead.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  style={{
+                    borderBottom: "1px solid #eee",
+                    background: hoveredRow === lead.id ? "#f9f9f9" : "white",
+                  }}
+                >
                   <td style={{ padding: "12px", fontWeight: "bold", color: "#2e4baf" }}>{lead.ref}</td>
                   <td style={{ padding: "12px" }}>{lead.lastname} {lead.firstname}</td>
                   <td style={{ padding: "12px" }}>{lead.email}</td>
@@ -219,7 +222,6 @@ export default function AdminPage() {
         </table>
       </div>
 
-      {/* Modal Détail */}
       {selectedLead && (
         <div
           style={{
